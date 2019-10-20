@@ -3,6 +3,8 @@ const User = require('../../models/User');
 const jwt = require('jsonwebtoken');
 const keys = require('../../config/keys');
 const passport = require('passport');
+const validateRegisterInput = require('../../validation/register');
+const validateLoginInput = require('../../validation/login');
 const express = require("express");
 const router = express.Router();
 
@@ -11,10 +13,13 @@ router.get("/test", (req, res) => res.json({
 }));
 
 router.post('/register', (req, res) => {
-  console.log(req.body);
-  const email = req.body.email;
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
   // Check to make sure nobody has already registered with a duplicate email
-  User.findOne({ email })
+  User.findOne({ email: req.body.email })
     .then(user =>{
       if (user) {
         // Throw a 400 error if the email address already exists
@@ -41,6 +46,12 @@ router.post('/register', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
+  const {errors, isValid } = validateLoginInput(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+  
   const email = req.body.email;
   const password = req.body.password;
 
